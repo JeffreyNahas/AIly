@@ -1,22 +1,8 @@
-# --- System ---
-.DS_Store
-Thumbs.db
-
-# --- Python (Backend) ---
+# .gitignore
+node_modules/
 __pycache__/
-*.py[cod]
 venv/
 .env
-.pytest_cache/
-
-# --- Node/React (Frontend) ---
-node_modules/
-build/
+.DS_Store
 dist/
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+build/
