@@ -1,16 +1,36 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import './App.css';
 
 function App() {
+  const { isAuthenticated, isLoading, user } = useAuth0();
+
+  if (isLoading) {
+    return <div className="loading-container">Loading...</div>;
+  }
+
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {!isAuthenticated ? (
+        <Routes>
+          <Route path="*" element={<Login />} />
+        </Routes>
+      ) : (
+        <div className="app-container">
+          <Sidebar user={user} />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
+      )}
     </Router>
   );
 }
