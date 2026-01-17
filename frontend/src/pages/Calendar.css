@@ -1,0 +1,203 @@
+.calendar-container {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.header-content h1 {
+  margin: 0;
+  font-size: 32px;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.header-content .subtitle {
+  margin: 8px 0 0 0;
+  color: #666;
+  font-size: 16px;
+}
+
+.create-event-btn {
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.create-event-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+.create-event-btn span:first-child {
+  font-size: 20px;
+}
+
+.calendar-content {
+  background: white;
+  border-radius: 16px;
+  border: 2px solid #e5e5e5;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* FullCalendar Custom Styling */
+.calendar-content .fc {
+  font-family: inherit;
+}
+
+.calendar-content .fc-toolbar-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.calendar-content .fc-button {
+  background-color: #4a90e2;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 600;
+  text-transform: capitalize;
+  transition: all 0.2s;
+}
+
+.calendar-content .fc-button:hover {
+  background-color: #357abd;
+}
+
+.calendar-content .fc-button-active {
+  background-color: #2c5f8d !important;
+}
+
+.calendar-content .fc-button:focus {
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
+
+.calendar-content .fc-button-primary:not(:disabled).fc-button-active,
+.calendar-content .fc-button-primary:not(:disabled):active {
+  background-color: #2c5f8d;
+}
+
+.calendar-content .fc-daygrid-day-number {
+  color: #333;
+  padding: 8px;
+  font-weight: 500;
+}
+
+.calendar-content .fc-col-header-cell {
+  background-color: #f8f9fa;
+  padding: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.calendar-content .fc-daygrid-day {
+  transition: background-color 0.2s;
+}
+
+.calendar-content .fc-daygrid-day:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.calendar-content .fc-daygrid-day.fc-day-today {
+  background-color: #e3f2fd !important;
+}
+
+.calendar-content .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-content .fc-event {
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-content .fc-event:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-content .fc-daygrid-event {
+  margin: 2px 4px;
+}
+
+/* Empty state message for when there are no events */
+.no-events-message {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 20px;
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .create-event-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .calendar-header h1 {
+    font-size: 24px;
+  }
+
+  .calendar-content {
+    padding: 16px;
+  }
+
+  .calendar-content .fc-toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .calendar-content .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+  }
+
+  .calendar-content .fc-button {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+}

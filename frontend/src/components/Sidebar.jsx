@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar({ user }) {
   const { logout } = useAuth0();
-  const [invoicesExpanded, setInvoicesExpanded] = useState(true);
-  const [clientsExpanded, setClientsExpanded] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [invoicesExpanded, setInvoicesExpanded] = useState(false);
+  const [clientsExpanded, setClientsExpanded] = useState(false);
 
   const handleLogout = () => {
     logout({ 
@@ -41,11 +44,6 @@ function Sidebar({ user }) {
               <button className="sidebar-item">
                 <span className="item-icon">📝</span>
                 <span className="item-label">Drafts</span>
-                <span className="item-count">0</span>
-              </button>
-              <button className="sidebar-item">
-                <span className="item-icon">✅</span>
-                <span className="item-label">Completed</span>
                 <span className="item-count">0</span>
               </button>
               <button className="sidebar-item">
@@ -102,7 +100,20 @@ function Sidebar({ user }) {
             </div>
           )}
         </div>
-        
+
+        {/* Calendar Section */}
+        <div className="sidebar-section">
+          <button 
+            className={`section-header ${location.pathname === '/calendar' ? 'active' : ''}`}
+            onClick={() => navigate('/calendar')}
+          >
+            <div className="section-title">
+              <span className="section-icon">📅</span>
+              <span>Calendar</span>
+            </div>
+          </button>
+        </div>
+
         {/* Jobs Section (collapsed by default) */}
         <div className="sidebar-section">
           <button 
@@ -116,6 +127,7 @@ function Sidebar({ user }) {
             <span className="expand-icon">›</span>
           </button>
         </div>
+        
       </nav>
 
       {/* Footer Actions */}
