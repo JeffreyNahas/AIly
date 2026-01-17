@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar({ user }) {
   const { logout } = useAuth0();
+  const navigate = useNavigate();
   const [invoicesExpanded, setInvoicesExpanded] = useState(true);
   const [clientsExpanded, setClientsExpanded] = useState(true);
 
@@ -120,7 +122,7 @@ function Sidebar({ user }) {
 
       {/* Footer Actions */}
       <div className="sidebar-footer">
-        <button className="sidebar-item">
+        <button className="sidebar-item" onClick={() => navigate('/profile')}>
           <span className="item-icon">👤</span>
           <span className="item-label">Profile</span>
         </button>
