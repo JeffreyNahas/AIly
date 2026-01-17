@@ -2,28 +2,14 @@
 
 ## Repository Structure
 
-### Main Branches
-- **`main`** - Production-ready code. Protected branch.
-- **Feature branches** - Individual work branches
+### Main Branch
+- **`main`** - Default branch. All code merges here. ✅ **Now configured as default!**
 
 ---
 
-## 🚨 IMPORTANT: Change Default Branch on GitHub
+## Workflow for Team Members (3 People)
 
-**You need to change the default branch from `louis` to `main` on GitHub:**
-
-1. Go to: https://github.com/Lstl04/McHacks13/settings/branches
-2. Under "Default branch", click the switch icon
-3. Select `main` as the new default branch
-4. Confirm the change
-
-After this, you can delete the `louis` branch if needed.
-
----
-
-## Workflow for Team Members
-
-### 1. Clone the Repository (First Time)
+### 1. Clone the Repository (First Time Only)
 ```bash
 git clone https://github.com/Lstl04/McHacks13.git
 cd McHacks13
@@ -40,32 +26,30 @@ git checkout main
 git pull origin main
 
 # Create your feature branch (use descriptive names)
-git checkout -b feature/your-feature-name
-# or
 git checkout -b yourname/feature-description
 ```
 
 **Branch Naming Conventions:**
-- `feature/feature-name` - New features
+- `yourname/feature-name` - Personal development branches
+- `feature/feature-name` - Shared features
 - `fix/bug-description` - Bug fixes
-- `yourname/task-name` - Personal development branches
 
-Examples:
-- `feature/user-authentication`
-- `fix/api-connection-error`
+**Examples:**
 - `louis/database-setup`
+- `john/user-authentication`
+- `sarah/frontend-components`
 
 ### 3. Working on Your Branch
 
 ```bash
 # Check which branch you're on
-git branch
+git status
 
 # Make your changes, then stage them
 git add .
 
 # Commit with a clear message
-git commit -m "Description of what you did"
+git commit -m "Add feature X" 
 
 # Push to GitHub
 git push origin your-branch-name
@@ -82,25 +66,31 @@ git pull origin main
 # Switch back to your branch
 git checkout your-branch-name
 
-# Merge main into your branch
+# Merge main into your branch to stay updated
 git merge main
 ```
 
 ### 5. Merging Your Work to Main
 
-**Option A: Pull Request (Recommended for teams)**
-1. Push your branch to GitHub
-2. Go to GitHub and create a Pull Request
-3. Have a teammate review your code
-4. Merge the PR on GitHub
-5. Delete the branch after merging
+**Option A: Pull Request on GitHub (Recommended)**
+1. Push your branch: `git push origin your-branch-name`
+2. Go to https://github.com/Lstl04/McHacks13
+3. Click "Compare & pull request"
+4. Add description of your changes
+5. Have a teammate review
+6. Click "Merge pull request"
+7. Delete the branch after merging
 
-**Option B: Direct Merge (Quick fixes only)**
+**Option B: Direct Merge (For small changes)**
 ```bash
-# Make sure your work is committed
+# Switch to main
 git checkout main
 git pull origin main
+
+# Merge your branch
 git merge your-branch-name
+
+# Push to GitHub
 git push origin main
 
 # Delete your feature branch
@@ -111,9 +101,21 @@ git branch -d your-branch-name
 
 ## Common Scenarios
 
-### Scenario 1: You Need Someone Else's Changes
+### Scenario 1: See What Changed
 ```bash
-# If they're on a different branch
+# See status of your files
+git status
+
+# See what changed in files
+git diff
+
+# See commit history
+git log --oneline
+```
+
+### Scenario 2: You Need Someone Else's Work
+```bash
+# Pull their branch
 git checkout their-branch-name
 git pull origin their-branch-name
 
@@ -122,35 +124,41 @@ git checkout your-branch
 git merge their-branch-name
 ```
 
-### Scenario 2: Merge Conflicts
+### Scenario 3: Merge Conflicts
+When two people edit the same file:
 ```bash
 # After git merge, if there are conflicts:
-# 1. Open the conflicting files
-# 2. Look for conflict markers: <<<<<<<, =======, >>>>>>>
-# 3. Resolve conflicts manually
-# 4. Stage the resolved files
+# 1. Git will tell you which files have conflicts
+# 2. Open those files and look for:
+#    <<<<<<< HEAD
+#    Your changes
+#    =======
+#    Their changes
+#    >>>>>>> branch-name
+# 3. Edit to keep what you want, delete the markers
+# 4. Save the file
 git add .
 git commit -m "Resolve merge conflicts"
 ```
 
-### Scenario 3: You Made Changes on the Wrong Branch
+### Scenario 4: Made Changes on Wrong Branch
 ```bash
-# Save your changes without committing
+# Save your changes
 git stash
 
-# Switch to the correct branch
+# Switch to correct branch
 git checkout correct-branch-name
 
-# Apply your saved changes
+# Apply your changes
 git stash pop
 ```
 
-### Scenario 4: Undo Last Commit (Not Pushed Yet)
+### Scenario 5: Undo Last Commit (Not Pushed Yet)
 ```bash
-# Keep changes but undo commit
+# Keep changes, undo commit
 git reset --soft HEAD~1
 
-# Undo commit and changes (DANGEROUS!)
+# Undo everything (BE CAREFUL!)
 git reset --hard HEAD~1
 ```
 
@@ -159,19 +167,19 @@ git reset --hard HEAD~1
 ## Team Best Practices
 
 ### ✅ DO:
-- **Pull often** - Get latest changes multiple times per day
-- **Commit often** - Small, focused commits are better
-- **Write clear commit messages** - "Fix login bug" not "updates"
-- **Create feature branches** - Don't work directly on main
-- **Communicate** - Let team know what you're working on
-- **Review code** - Check each other's PRs before merging
+- **Pull from main daily** - Stay synced with team
+- **Commit often** - Small commits are better than huge ones
+- **Write clear messages** - "Add login validation" not "changes"
+- **Test before merging** - Make sure it works!
+- **Communicate** - Tell team what you're working on
+- **Delete old branches** - Keep repo clean
 
 ### ❌ DON'T:
-- **Don't force push** - Avoid `git push --force` unless you know what you're doing
-- **Don't commit secrets** - API keys, passwords should be in `.env` (already in `.gitignore`)
-- **Don't commit dependencies** - `node_modules/`, `__pycache__/`, etc. are in `.gitignore`
-- **Don't merge without testing** - Test your code before merging to main
-- **Don't leave branches open** - Delete feature branches after merging
+- **Don't force push** - You'll overwrite others' work
+- **Don't commit secrets** - API keys go in `.env` (already ignored)
+- **Don't commit `node_modules/`** - Already in `.gitignore`
+- **Don't work on main directly** - Always use feature branches
+- **Don't leave conflicts unresolved** - Fix them immediately
 
 ---
 
@@ -179,70 +187,102 @@ git reset --hard HEAD~1
 
 ```
 McHacks13/
-├── backend/           # Python/FastAPI backend
-│   └── main.py
-├── frontend/          # React frontend
-│   ├── src/
-│   ├── public/
-│   └── package.json
-├── requirements.txt   # Python dependencies
-└── .gitignore        # Ignored files
+├── backend/              # Python FastAPI backend
+│   ├── main.py          # API endpoints
+│   └── mchacks/         # Virtual environment
+├── frontend/            # React + Vite frontend
+│   ├── src/            # React components
+│   ├── public/         # Static files
+│   └── package.json    # Dependencies
+├── requirements.txt    # Python dependencies
+├── .gitignore         # Files Git ignores
+└── GIT_WORKFLOW.md    # This file!
 ```
 
 ---
 
-## Quick Reference
+## Quick Reference Commands
 
 ```bash
-# Status of your files
-git status
-
-# See your branches
+# Check what branch you're on
 git branch
 
-# See all branches including remote
+# See all branches (local + remote)
 git branch -a
+
+# Create new branch
+git checkout -b new-branch-name
 
 # Switch branches
 git checkout branch-name
 
-# Create and switch to new branch
-git checkout -b new-branch-name
+# Update from GitHub
+git pull
 
-# See commit history
+# See what changed
+git status
+git diff
+
+# Stage all changes
+git add .
+
+# Commit changes
+git commit -m "Your message"
+
+# Push to GitHub
+git push origin branch-name
+
+# Get latest main
+git checkout main && git pull origin main
+
+# Delete local branch
+git branch -d branch-name
+
+# Delete remote branch
+git push origin --delete branch-name
+```
+
+---
+
+## Emergency: "I Messed Up!"
+
+### If you haven't pushed yet:
+```bash
+# See where you are
+git status
 git log --oneline
 
-# See who changed what
-git blame filename
+# Go back to last commit (keeps changes)
+git reset --soft HEAD~1
 
-# Discard changes to a file
-git restore filename
-
-# Update your local branch list
-git fetch --prune
+# Go back and DELETE changes (careful!)
+git reset --hard HEAD~1
 ```
+
+### If you already pushed:
+**STOP! Ask your teammates before doing anything!**
+
+Git makes it hard to lose work permanently. When in doubt:
+1. Don't panic
+2. Run `git status` and screenshot it
+3. Ask the team for help
+
+---
+
+## Tips for Success
+
+1. **Pull before you push** - Always `git pull` before `git push`
+2. **Read the messages** - Git tells you what went wrong
+3. **One feature per branch** - Don't mix unrelated changes
+4. **Sync often** - Don't go days without pulling from main
+5. **Use GitHub Desktop** - If command line is confusing: https://desktop.github.com/
 
 ---
 
 ## Need Help?
 
-- **Check status**: `git status`
+- **GitHub Repository**: https://github.com/Lstl04/McHacks13
 - **Ask the team** in your group chat
-- **GitHub Desktop**: If you prefer a GUI, use [GitHub Desktop](https://desktop.github.com/)
+- **Git Cheat Sheet**: https://education.github.com/git-cheat-sheet-education.pdf
 
----
-
-## Emergency: "I messed up!"
-
-```bash
-# See what branch you're on and what's changed
-git status
-
-# If you haven't pushed yet, you can usually undo
-git log --oneline  # Find the commit you want to go back to
-git reset --soft COMMIT_HASH
-
-# If you pushed and need help - STOP and ask the team!
-```
-
-Remember: Git is designed to make it hard to permanently lose work. When in doubt, ask!
+Remember: Everyone makes Git mistakes. The key is communicating with your team! 🚀
