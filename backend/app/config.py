@@ -25,6 +25,9 @@ class Settings:
     EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "")
     EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "PersonalCFO")
     
+    # CORS Configuration
+    ALLOWED_ORIGINS: list = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
+    
     def validate(self):
         """Validate that required settings are present"""
         if not self.MONGODB_URI or self.MONGODB_URI == "":
