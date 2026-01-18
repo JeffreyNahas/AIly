@@ -1,44 +1,56 @@
 # backend/app/api/dependencies.py
 import os
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
-
-security = HTTPBearer()
+from fastapi.security import OAuth2PasswordBearer
+import jwt
+import requests
 
 AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-    
+async def verify_token(token: str = Depends(oauth2_scheme)):
     try:
-        # First, decode without verification to see what's in the token
-        unverified_payload = jwt.decode(
-            token,
-            key=None,
-            options={"verify_signature": False, "verify_aud": False, "verify_exp": False}
-        )
+        # 1. Fetch the Public Keys (JWKS) from Auth0
+        jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
+        jwks = requests.get(jwks_url).json()
         
+        # 2. Extract the header to find the Key ID (kid)
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
         
-        # Now decode with verification
-        # Note: We are skipping signature verification for Hackathon speed ("verify_signature": False)
-        # In production, you would fetch the public key from Auth0 to verify the signature.
+        # 3. Find the specific public key that matches the 'kid'
+        rsa_key = {}
+        for key in jwks["keys"]:
+            if key["kid"] == kid:
+                rsa_key = {
+                    "kty": key["kty"],
+                    "kid": key["kid"],
+                    "use": key["use"],
+                    "n": key["n"],
+                    "e": key["e"]
+                }
+        
+        if not rsa_key:
+            raise HTTPException(status_code=401, detail="Public key not found.")
+
+        # 4. Construct the public key and decode/verify
+        # PyJWT's jwk_from_dict or similar helper is used here
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(rsa_key)
+        
         payload = jwt.decode(
             token,
-            key=None,
-            options={"verify_signature": False, "verify_aud": True, "verify_exp": False},
+            public_key,
+            algorithms=["RS256"],
             audience=AUTH0_AUDIENCE,
             issuer=f"https://{AUTH0_DOMAIN}/"
         )
-        
-        return payload # Returns the dict: {"sub": "auth0|123", ...}
+        return payload
 
-    except JWTError as e:
-        print(f"JWT Error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Could not validate credentials {str(e)}",
-        )
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token.")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
