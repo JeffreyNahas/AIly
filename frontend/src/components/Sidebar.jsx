@@ -1,20 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar({ user }) {
-  const { logout } = useAuth0();
+  const { logout, getAccessTokenSilently } = useAuth0();
   const navigate = useNavigate();
   const [invoicesExpanded, setInvoicesExpanded] = useState(true);
   const [clientsExpanded, setClientsExpanded] = useState(true);
   const location = useLocation();
+  const [invoiceCounts, setInvoiceCounts] = useState({
+    drafts: 0,
+    sent: 0,
+    paid: 0,
+    overdue: 0
+  });
 
   const handleLogout = () => {
     logout({ 
       logoutParams: { returnTo: window.location.origin } 
     });
   };
+
+  const fetchInvoiceCounts = async () => {
+    try {
+      if (!user?.sub) return;
+
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: "https://personalcfo.com"
+        }
+      });
+
+      // Fetch counts for each status
+      const statuses = ['draft', 'sent', 'paid', 'overdue'];
+      const counts = {};
+
+      await Promise.all(
+        statuses.map(async (status) => {
+          try {
+            const response = await fetch(
+              `http://127.0.0.1:8000/api/invoices/?user_id=${user.sub}&status_filter=${status}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              counts[status] = data.length;
+            } else {
+              counts[status] = 0;
+            }
+          } catch (error) {
+            console.error(`Error fetching ${status} invoices:`, error);
+            counts[status] = 0;
+          }
+        })
+      );
+
+      setInvoiceCounts({
+        drafts: counts.draft || 0,
+        sent: counts.sent || 0,
+        paid: counts.paid || 0,
+        overdue: counts.overdue || 0
+      });
+    } catch (error) {
+      console.error('Error fetching invoice counts:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoiceCounts();
+    
+    // Refresh counts when route changes (user navigates between invoice pages)
+    const interval = setInterval(() => {
+      fetchInvoiceCounts();
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [user, location.pathname]);
 
   return (
     <div className="sidebar">
@@ -41,25 +107,37 @@ function Sidebar({ user }) {
           
           {invoicesExpanded && (
             <div className="section-content">
-              <button className="sidebar-item">
+              <button 
+                className={`sidebar-item ${location.pathname === '/invoices/drafts' ? 'active' : ''}`}
+                onClick={() => navigate('/invoices/drafts')}
+              >
                 <span className="item-icon">📝</span>
                 <span className="item-label">Drafts</span>
-                <span className="item-count">0</span>
+                <span className="item-count">{invoiceCounts.drafts}</span>
               </button>
-              <button className="sidebar-item">
+              <button 
+                className={`sidebar-item ${location.pathname === '/invoices/sent' ? 'active' : ''}`}
+                onClick={() => navigate('/invoices/sent')}
+              >
                 <span className="item-icon">📤</span>
                 <span className="item-label">Sent</span>
-                <span className="item-count">0</span>
+                <span className="item-count">{invoiceCounts.sent}</span>
               </button>
-              <button className="sidebar-item">
+              <button 
+                className={`sidebar-item ${location.pathname === '/invoices/paid' ? 'active' : ''}`}
+                onClick={() => navigate('/invoices/paid')}
+              >
                 <span className="item-icon">✓</span>
                 <span className="item-label">Paid</span>
-                <span className="item-count">0</span>
+                <span className="item-count">{invoiceCounts.paid}</span>
               </button>
-              <button className="sidebar-item">
+              <button 
+                className={`sidebar-item ${location.pathname === '/invoices/overdue' ? 'active' : ''}`}
+                onClick={() => navigate('/invoices/overdue')}
+              >
                 <span className="item-icon">⚠️</span>
                 <span className="item-label">Overdue</span>
-                <span className="item-count">0</span>
+                <span className="item-count">{invoiceCounts.overdue}</span>
               </button>
             </div>
           )}

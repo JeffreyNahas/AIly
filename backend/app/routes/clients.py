@@ -12,11 +12,13 @@ async def create_client(client: ClientCreate):
     """Create a new client"""
     db = get_database()
     
-    # Verify user exists
-    if not ObjectId.is_valid(client.userId):
+    # Verify user exists by auth0_id (not ObjectId validation)
+    # Auth0 IDs look like "auth0|123456" or "google-oauth2|123456"
+    user = db.users.find_one({"auth0_id": client.userId})
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
         )
     
     # Insert client

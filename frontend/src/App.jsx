@@ -6,6 +6,10 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Calendar from './pages/Calendar';
 import Jobs from './pages/Jobs';
+import InvoicesDrafts from './pages/InvoicesDrafts';
+import InvoicesSent from './pages/InvoicesSent';
+import InvoicesPaid from './pages/InvoicesPaid';
+import InvoicesOverdue from './pages/InvoicesOverdue';
 import Onboarding from './pages/Onboarding';
 import './App.css';
 
@@ -32,6 +36,10 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/jobs" element={<Jobs />} />
+              <Route path="/invoices/drafts" element={<InvoicesDrafts />} />
+              <Route path="/invoices/sent" element={<InvoicesSent />} />
+              <Route path="/invoices/paid" element={<InvoicesPaid />} />
+              <Route path="/invoices/overdue" element={<InvoicesOverdue />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

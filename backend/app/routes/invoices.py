@@ -1,58 +1,134 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List, Dict, Any
 from bson import ObjectId
+from datetime import datetime, timezone
 
 from ..models import Invoice, InvoiceCreate, InvoiceUpdate, MessageResponse
 from ..database import get_database
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
+def check_and_update_overdue_invoices(user_id: str = None):
+    """Check for sent invoices with past due dates and update them to overdue"""
+    db = get_database()
+    
+    # Build query for sent invoices
+    query = {"status": "sent"}
+    if user_id:
+        query["userId"] = user_id
+    
+    # Get all sent invoices
+    sent_invoices = list(db.invoices.find(query))
+    
+    # Get current date (UTC)
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    updated_count = 0
+    for invoice in sent_invoices:
+        if invoice.get("dueDate"):
+            try:
+                # Parse due date
+                due_date = invoice["dueDate"]
+                if isinstance(due_date, str):
+                    try:
+                        # Try parsing ISO format with timezone
+                        due_date = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+                    except:
+                        # Fallback: try parsing without timezone and add UTC
+                        due_date = datetime.fromisoformat(due_date)
+                        due_date = due_date.replace(tzinfo=timezone.utc)
+                elif isinstance(due_date, datetime):
+                    # Ensure timezone-aware
+                    if due_date.tzinfo is None:
+                        due_date = due_date.replace(tzinfo=timezone.utc)
+                else:
+                    continue  # Skip if we can't parse
+                
+                # Normalize to start of day for comparison
+                due_date = due_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                
+                # If due date is in the past, update status to overdue
+                if due_date < today:
+                    db.invoices.update_one(
+                        {"_id": invoice["_id"]},
+                        {"$set": {"status": "overdue"}}
+                    )
+                    updated_count += 1
+            except Exception as e:
+                # Log error but continue processing other invoices
+                print(f"Error processing invoice {invoice.get('_id')} for overdue check: {e}")
+                continue
+    
+    return updated_count
+
+def convert_objectid_to_str(doc):
+    """Convert ObjectId fields to strings for JSON serialization"""
+    if doc is None:
+        return None
+    if isinstance(doc, dict):
+        result = {}
+        for key, value in doc.items():
+            if isinstance(value, ObjectId):
+                result[key] = str(value)
+            elif isinstance(value, datetime):
+                result[key] = value.isoformat()
+            elif isinstance(value, dict):
+                result[key] = convert_objectid_to_str(value)
+            elif isinstance(value, list):
+                result[key] = [convert_objectid_to_str(item) for item in value]
+            else:
+                result[key] = value
+        return result
+    return doc
+
 @router.post("/", response_model=Invoice, status_code=status.HTTP_201_CREATED)
 async def create_invoice(invoice: InvoiceCreate):
     """Create a new invoice"""
     db = get_database()
     
-    # Validate IDs
-    if not ObjectId.is_valid(invoice.userId):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
-        )
-    
-    if not ObjectId.is_valid(invoice.clientId):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid client ID format"
-        )
-    
-    # Verify client exists and auto-link to user if not already linked
-    client = db.clients.find_one({"_id": ObjectId(invoice.clientId)})
-    if not client:
+    # Validate user exists by auth0_id (not ObjectId validation)
+    # Auth0 IDs look like "auth0|123456" or "google-oauth2|123456"
+    user = db.users.find_one({"auth0_id": invoice.userId})
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Client not found"
+            detail="User not found"
         )
     
-    # Auto-link client to user if client doesn't have a userId
-    if not client.get("userId"):
-        db.clients.update_one(
-            {"_id": ObjectId(invoice.clientId)},
-            {"$set": {"userId": invoice.userId}}
-        )
+    # Validate client ID only if provided and not empty
+    if invoice.clientId and invoice.clientId.strip():
+        if not ObjectId.is_valid(invoice.clientId):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid client ID format"
+            )
+        
+        # Verify client exists and auto-link to user if not already linked
+        client = db.clients.find_one({"_id": ObjectId(invoice.clientId)})
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found"
+            )
+        
+        # Auto-link client to user if client doesn't have a userId
+        if not client.get("userId"):
+            db.clients.update_one(
+                {"_id": ObjectId(invoice.clientId)},
+                {"$set": {"userId": invoice.userId}}
+            )
     
     # Auto-generate invoice number if not provided
     if not invoice.invoiceNumber:
-        # Get user's last invoice number
-        user = db.users.find_one({"_id": ObjectId(invoice.userId)})
-        if user:
-            last_number = user.get("lastInvoiceNumber", 1000)
-            invoice.invoiceNumber = f"INV-{last_number + 1}"
-            
-            # Update user's last invoice number
-            db.users.update_one(
-                {"_id": ObjectId(invoice.userId)},
-                {"$set": {"lastInvoiceNumber": last_number + 1}}
-            )
+        # Get user's last invoice number using auth0_id
+        last_number = user.get("lastInvoiceNumber", 1000)
+        invoice.invoiceNumber = f"INV-{last_number + 1}"
+        
+        # Update user's last invoice number
+        db.users.update_one(
+            {"auth0_id": invoice.userId},
+            {"$set": {"lastInvoiceNumber": last_number + 1}}
+        )
     
     # Insert invoice
     invoice_dict = invoice.model_dump(exclude_unset=True)
@@ -72,6 +148,11 @@ async def get_invoices(
 ):
     """Get all invoices with optional filters"""
     db = get_database()
+    
+    # Check and update overdue invoices before fetching
+    # Only check if we're not specifically filtering for overdue (to avoid infinite loops)
+    if status_filter != "overdue":
+        check_and_update_overdue_invoices(user_id=user_id)
     
     query = {}
     if user_id:
@@ -179,10 +260,13 @@ async def get_invoice_details(invoice_id: str):
             detail="Invoice not found"
         )
     
-    # Get user details
+    # Convert ObjectId and datetime fields to strings for JSON serialization
+    invoice = convert_objectid_to_str(invoice)
+    
+    # Get user details (using auth0_id since userId is now Auth0 ID)
     user_details = None
     if invoice.get("userId"):
-        user = db.users.find_one({"_id": ObjectId(invoice["userId"])})
+        user = db.users.find_one({"auth0_id": invoice["userId"]})
         if user:
             user_details = {
                 "_id": str(user["_id"]),
@@ -196,29 +280,31 @@ async def get_invoice_details(invoice_id: str):
     
     # Get client details
     client_details = None
-    if invoice.get("clientId"):
-        client = db.clients.find_one({"_id": ObjectId(invoice["clientId"])})
-        if client:
-            client_details = {
-                "_id": str(client["_id"]),
-                "name": client.get("name"),
-                "email": client.get("email"),
-                "address": client.get("address")
-            }
+    if invoice.get("clientId") and invoice.get("clientId").strip():
+        if ObjectId.is_valid(invoice["clientId"]):
+            client = db.clients.find_one({"_id": ObjectId(invoice["clientId"])})
+            if client:
+                client_details = {
+                    "_id": str(client["_id"]),
+                    "name": client.get("name"),
+                    "email": client.get("email"),
+                    "address": client.get("address")
+                }
     
     # Get job details if exists
     job_details = None
-    if invoice.get("jobId"):
-        job = db.jobs.find_one({"_id": ObjectId(invoice["jobId"])})
-        if job:
-            job_details = {
-                "_id": str(job["_id"]),
-                "title": job.get("title"),
-                "status": job.get("status"),
-                "startTime": job.get("startTime"),
-                "endTime": job.get("endTime"),
-                "location": job.get("location")
-            }
+    if invoice.get("jobId") and invoice.get("jobId").strip():
+        if ObjectId.is_valid(invoice["jobId"]):
+            job = db.jobs.find_one({"_id": ObjectId(invoice["jobId"])})
+            if job:
+                job_details = {
+                    "_id": str(job["_id"]),
+                    "title": job.get("title"),
+                    "status": job.get("status"),
+                    "startTime": job.get("startTime"),
+                    "endTime": job.get("endTime"),
+                    "location": job.get("location")
+                }
     
     return {
         "invoice": invoice,
