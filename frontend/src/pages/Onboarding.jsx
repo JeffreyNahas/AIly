@@ -168,12 +168,17 @@ function Onboarding() {
             <div>
               <label style={labelStyle}>Industry / Category</label>
               <select name="businessCategory" value={formData.businessCategory} onChange={handleChange} style={inputStyle}>
+                <option value="">Select a category</option>
                 <option value="Consulting">Consulting</option>
-                <option value="Development">Software Development</option>
-                <option value="Design">Design / Creative</option>
-                <option value="Legal">Legal Services</option>
-                <option value="Trades">Trades (Plumbing, Electric, etc.)</option>
+                <option value="Construction">Construction</option>
+                <option value="Design">Design</option>
+                <option value="Development">Development</option>
+                <option value="Electrician">Electrician</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Photography">Photography</option>
+                <option value="Plumbing">Plumbing</option>
                 <option value="Retail">Retail</option>
+                <option value="Software">Software Development</option>
                 <option value="Other">Other</option>
               </select>
             </div>
