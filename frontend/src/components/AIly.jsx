@@ -3,31 +3,30 @@ import { useAuth0 } from '@auth0/auth0-react';
 import ReactMarkdown from 'react-markdown';
 import { 
   Send, 
-  User, 
   Mic, 
   Square, 
   Loader2, 
   Hammer, 
   X, 
   Zap, 
-  Activity 
+  Activity,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import './AIly.css';
 
-const AIlySidebar = () => {
+const AIly = () => {
   const { getAccessTokenSilently } = useAuth0();
   
-  // Sidebar State
+  // State for Window & Chat
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Chat State
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
-      content: `**AIly Online.** I'm locked into your business data. What's the job?
+      content: `**AIly System Engaged.** I have full access to your business records. 
       
-* **Tracking**: "List all unpaid invoices from this month."
-* **Scheduling**: "Put a repair job for 2 PM tomorrow on the calendar."`
+* **Status**: "What's my profit this month?"
+* **Action**: "Remind the client at 450 Pine St about their invoice."`
     }
   ]);
   const [input, setInput] = useState('');
@@ -41,32 +40,34 @@ const AIlySidebar = () => {
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
 
-  // --- Audio Recording Logic ---
+  // Auto-scroll logic
+  useEffect(() => {
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoading, isOpen]);
+
+  // --- Audio Logic ---
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream);
       audioChunks.current = [];
-
-      mediaRecorder.current.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunks.current.push(event.data);
-      };
-
+      mediaRecorder.current.ondataavailable = (e) => audioChunks.current.push(e.data);
       mediaRecorder.current.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         await handleVoiceTranscription(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
-
       mediaRecorder.current.start();
       setIsRecording(true);
     } catch (err) {
-      alert("Microphone access denied.");
+      console.error("Mic error:", err);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder.current && isRecording) {
+    if (mediaRecorder.current) {
       mediaRecorder.current.stop();
       setIsRecording(false);
     }
@@ -76,7 +77,6 @@ const AIlySidebar = () => {
     setIsTranscribing(true);
     const formData = new FormData();
     formData.append('file', blob, 'recording.wav');
-
     try {
       const token = await getAccessTokenSilently();
       const response = await fetch('http://127.0.0.1:8000/api/agent/chat/voice', {
@@ -84,31 +84,21 @@ const AIlySidebar = () => {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-
       const data = await response.json();
       if (data.user_text) {
         setInput(data.user_text);
         await executeChat(data.user_text);
       }
     } catch (err) {
-      console.error("Transcription error:", err);
+      console.error(err);
     } finally {
       setIsTranscribing(false);
     }
   };
 
   // --- Chat Logic ---
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
-
   const executeChat = async (messageText) => {
     if (!messageText.trim()) return;
-
     const userMessage = { role: 'user', content: messageText };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
@@ -124,110 +114,96 @@ const AIlySidebar = () => {
         },
         body: JSON.stringify({ message: messageText })
       });
-
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Connection lost. Check server." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "SYSTEM_OFFLINE: Check backend connection." }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <>
-      {/* 1. Minimized Floating Trigger (The Circle) */}
-      {!isOpen && (
-        <button className="ailly-fab" onClick={() => setIsOpen(true)}>
-          <Hammer size={28} />
-          <div className="status-dot"></div>
-        </button>
-      )}
-
-      {/* 2. Sliding Sidebar */}
-      <div className={`ailly-sidebar ${isOpen ? 'open' : ''}`}>
+    <div className="ailly-root">
+      {/* 1. The Growth Window */}
+      <div className={`ailly-window ${isOpen ? 'expanded' : 'collapsed'}`}>
         
-        {/* Assistant Header Dashboard */}
-        <div className="sidebar-header">
-          <div className="status-strip">
-            <div className="status-indicator">
-              <Activity size={12} className="pulse-icon" />
-              <span>AILY SYSTEM ACTIVE</span>
+        {/* Header - visible only when expanded */}
+        {isOpen && (
+          <div className="ailly-header">
+            <div className="header-status">
+              <Activity size={14} className="pulse-icon" />
+              <span>AILY_V2.1 // ACTIVE</span>
             </div>
-            <button className="close-btn" onClick={() => setIsOpen(false)}>
-              <X size={18} />
+            <button className="icon-btn" onClick={() => setIsOpen(false)}>
+              <Minimize2 size={18} />
             </button>
           </div>
-          
-          <div className="assistant-identity">
-            <div className="avatar-frame">
-              <Hammer size={28} />
-            </div>
-            <div className="id-text">
-              <h2>AILY</h2>
-              <p>Industrial CFO Assistant</p>
-            </div>
-          </div>
+        )}
+
+        {/* Branding Area */}
+        <div className="ailly-branding" onClick={() => !isOpen && setIsOpen(true)}>
+           <div className={`avatar-container ${!isOpen ? 'clickable' : ''}`}>
+             <Hammer size={isOpen ? 32 : 28} />
+             {!isOpen && <div className="online-ping"></div>}
+           </div>
+           {isOpen && (
+             <div className="id-card">
+               <h2>AIly</h2>
+               <p>INDUSTRIAL ASSISTANT</p>
+             </div>
+           )}
         </div>
 
-        {/* Messages Container */}
-        <div className="sidebar-messages">
-          {messages.map((msg, index) => (
-            <div key={index} className={`msg-wrapper ${msg.role}`}>
-              <div className="bubble">
-                {msg.role === 'assistant' ? (
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
-                ) : (
-                  msg.content
-                )}
-              </div>
+        {/* Chat Area - content only when expanded */}
+        {isOpen && (
+          <>
+            <div className="ailly-messages">
+              {messages.map((msg, index) => (
+                <div key={index} className={`msg-block ${msg.role}`}>
+                  <div className="msg-bubble">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="msg-block assistant">
+                  <div className="thinking-dots">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
-          ))}
-          
-          {isLoading && (
-            <div className="msg-wrapper assistant">
-              <div className="bubble thinking">
-                <span></span><span></span><span></span>
-              </div>
+
+            <div className="ailly-controls">
+              <form className="input-group" onSubmit={(e) => { e.preventDefault(); executeChat(input); }}>
+                <input 
+                  placeholder={isTranscribing ? "LISTENING..." : "COMMAND..."}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={isTranscribing}
+                />
+                <button type="submit" disabled={!input.trim() || isLoading}>
+                  <Send size={16} />
+                </button>
+              </form>
+              
+              <button 
+                className={`voice-btn ${isRecording ? 'is-recording' : ''}`}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isTranscribing}
+              >
+                {isTranscribing ? <Loader2 className="spin" size={18} /> : 
+                 isRecording ? <Square size={18} /> : <Mic size={18} />}
+                <span>{isRecording ? "STOP RECORDING" : "VOICE COMMAND"}</span>
+              </button>
             </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Footer Input Tray */}
-        <div className="sidebar-footer">
-          <form className="input-row" onSubmit={(e) => { e.preventDefault(); executeChat(input); }}>
-            <input 
-              type="text" 
-              placeholder={isTranscribing ? "TRANSCRIBING..." : "ENTER COMMAND..."} 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading || isTranscribing}
-            />
-            <button type="submit" disabled={isLoading || !input.trim() || isTranscribing}>
-              <Send size={18} />
-            </button>
-          </form>
-
-          {/* Voice Command Button */}
-          <button 
-            type="button"
-            className={`mic-button ${isRecording ? 'active' : ''}`}
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={isLoading || isTranscribing}
-          >
-            {isTranscribing ? (
-              <Loader2 className="spin" size={20} />
-            ) : isRecording ? (
-              <Square size={20} />
-            ) : (
-              <Mic size={20} />
-            )}
-          </button>
-        </div>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
-export default AIlySidebar;
+export default AIly;
