@@ -3,3 +3,6 @@ uvicorn
 pymongo
 python-dotenv
 python-jose
+duckdb
+pandas
+requests
