@@ -181,6 +181,8 @@ class InvoiceBase(BaseModel):
     clientId: Optional[str] = None
     jobId: Optional[str] = None
     invoiceNumber: Optional[str] = None
+    invoiceTitle: Optional[str] = None
+    invoiceDescription: Optional[str] = None
     status: Optional[str] = "draft"  # draft, sent, paid, overdue, cancelled
     issueDate: Optional[datetime] = None
     dueDate: Optional[datetime] = None
@@ -190,7 +192,7 @@ class InvoiceBase(BaseModel):
 class InvoiceCreate(InvoiceBase):
     """Model for creating a new invoice"""
     userId: str  # Required
-    clientId: str  # Required
+    clientId: Optional[str] = ""  # Optional, can be empty string
 
 class InvoiceUpdate(InvoiceBase):
     """Model for updating an invoice"""
