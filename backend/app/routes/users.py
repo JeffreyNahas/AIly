@@ -47,12 +47,13 @@ def update_profile(profile: User, token: dict = Depends(verify_token)):
         {"$set": {
             "businessName": profile.businessName,
             "businessPhone": profile.businessPhone,
+            "businessEmail": profile.businessEmail,
             "businessAddress": profile.businessAddress,
             "businessCategory": profile.businessCategory,
             "hourlyRate": profile.hourlyRate,
             "firstName": profile.firstName,
             "lastName": profile.lastName,
-            "personalEmail": token.get("https://personalcfo.com/email"),
+            "personalEmail": profile.personalEmail,
             "onboarding_complete": True 
         }}
     )
