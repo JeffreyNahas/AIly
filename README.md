@@ -15,7 +15,7 @@ gumloop,
 javascript,
 mongodb,
 python,
-react,
+react
 
 ## Inspiration
 AIly was born from watching our parents run their own small businesses. We saw firsthand the "second shift" they worked after work, spending hours at the kitchen table sorting through stacks of paper receipts and trying to fix a messy handwritten schedule after a long day of physical work.
