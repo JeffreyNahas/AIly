@@ -57,7 +57,7 @@ async def create_job(job: JobCreate):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Client not found"
             )
-    
+    # Transform Input Data to appropriate types for storage in the database (e.g. ObjectId for MongoDB ObjectIds)
     # Insert job
     job_dict = job.model_dump(exclude_unset=True)
     # Convert userId to ObjectId
