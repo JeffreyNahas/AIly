@@ -1,3 +1,8 @@
+## AIly - Won Prize for Best AI project that uses the Gumloop API 🏆
+
+## Demo Video
+https://youtu.be/Ln1-V754rl0
+
 ## Inspiration
 AIly was born from watching our parents run their own small businesses. We saw firsthand the "second shift" they worked after work, spending hours at the kitchen table sorting through stacks of paper receipts and trying to fix a messy handwritten schedule after a long day of physical work.
 
@@ -32,3 +37,6 @@ The strict time constraint forced us to be disciplined with our "feature triage.
 Moving forward, we plan to speak directly with small business owners to better understand their daily needs without the pressure of a deadline. This feedback will be essential for refining the user experience and ensuring the tool solves real-world operational problems.
 
 Technically, our next steps include adding robust sanity checks to our AI workflows and expanding our library of third-party integrations. We also aim to build a client-facing portal that allows customers to interact directly with the business calendar to book appointments, further automating the scheduling process and reducing manual back-and-forth.
+
+Devpost Link for McHacks 13 Participation: 
+https://devpost.com/software/personalcfo#updates
