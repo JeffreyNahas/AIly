@@ -1,4 +1,4 @@
-## AIly - Won Prize for Best AI project that uses the Gumloop API 🏆
+## AIly - Won Prize for Best AI project that uses the Gumloop API in McHacks 13 (McGill University's Hackathon) 🏆
 
 ## Demo Video
 https://youtu.be/Ln1-V754rl0
